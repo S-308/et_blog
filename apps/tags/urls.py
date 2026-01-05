@@ -8,8 +8,8 @@ from .views import (
 
 urlpatterns = [
     path("tags/", TagListAPIView.as_view()),
-    path("tags/<slug:slug>/", TagDetailAPIView.as_view()),
     path("tags/create/", TagCreateAPIView.as_view()),
+    path("tags/<slug:slug>/", TagDetailAPIView.as_view()),
     path("tags/<slug:slug>/manage/", TagUpdateDeleteAPIView.as_view()),
 ]
 

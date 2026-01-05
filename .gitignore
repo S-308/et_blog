@@ -19,3 +19,6 @@ Thumbs.db
 
 # Docker
 .env.docker
+
+# My Notes
+et_blog/notes.py

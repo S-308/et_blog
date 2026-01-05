@@ -13,7 +13,6 @@ from .serializers import (
     PostCreateUpdateSerializer,
 )
 from .permissions import IsAuthorOrAdmin
-from django.core.cache import cache
 
 
 class PostPagination(PageNumberPagination):
@@ -60,16 +59,6 @@ class PostListCreateAPIView(APIView):
     )
 
     def get(self, request):
-
-        params = request.query_params.dict()
-        cache_key = "posts:list:" + "|".join(
-            f"{k}={v}" for k, v in sorted(params.items())
-        )
-
-        # Try cache
-        cached_response = cache.get(cache_key)
-        if cached_response:
-            return Response(cached_response)
 
         queryset = Post.objects.filter(is_deleted=False).order_by("id")
 
@@ -123,11 +112,8 @@ class PostListCreateAPIView(APIView):
         paginator = PageNumberPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         serializer = PostListSerializer(paginated_queryset, many=True)
-        response_data = paginator.get_paginated_response(serializer.data).data
 
-        # Store in cache
-        cache.set(cache_key, response_data, timeout=10)
-        return Response(response_data)
+        return paginator.get_paginated_response(serializer.data)
     
     @extend_schema(
         summary="Create a post",
@@ -148,7 +134,6 @@ class PostListCreateAPIView(APIView):
             PostDetailSerializer(post).data,
             status=status.HTTP_201_CREATED,
         )
-
 
 
 class PostDetailAPIView(APIView):
@@ -211,5 +196,3 @@ class PostDetailAPIView(APIView):
         self.check_object_permissions(request, post)
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-# Later set : clear.cache()

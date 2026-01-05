@@ -8,7 +8,7 @@ from .serializers import UserSerializer, UserCreateSerializer
 
 class UserListCreateAPIView(APIView):
     """
-    GET  (Admin)
+    GET  (Public)
     POST (Public)
     """
 
