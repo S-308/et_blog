@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.comments',
     'apps.categories',
     'apps.tags',
+    'django_filters',
     'drf_spectacular',
 ]
 
