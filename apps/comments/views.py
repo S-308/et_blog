@@ -13,6 +13,8 @@ from .serializers import (
 from .permissions import IsAuthorOrAdmin
 from .throttles import CommentRateThrottle
 from rest_framework.pagination import PageNumberPagination
+from .filters import CommentFilter
+
 
 class CommentPagination(PageNumberPagination):
     page_size = 10
@@ -59,9 +61,13 @@ class PostCommentListAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        comments = post.comments.all().order_by("id")
+        comments = post.objects.filter(is_deleted=False).order_by("id")
+
+        filterset = CommentFilter(request.GET, queryset=comments)
+        queryset = filterset.qs
+
         paginator = CommentPagination()
-        page = paginator.paginate_queryset(comments, request)
+        page = paginator.paginate_queryset(queryset, request)
         serializer = CommentListSerializer(page, many=True)
 
         return paginator.get_paginated_response(serializer.data)

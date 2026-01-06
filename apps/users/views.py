@@ -6,6 +6,8 @@ from drf_spectacular.utils import extend_schema
 from .models import User
 from .serializers import UserSerializer, UserCreateSerializer
 from rest_framework.pagination import PageNumberPagination
+from .filters import UserFilter
+
 
 class UserPagination(PageNumberPagination):
     page_size = 10
@@ -27,9 +29,13 @@ class UserListCreateAPIView(APIView):
     )
 
     def get(self, request):
-        users = User.objects.all().order_by("id")
+        users = User.objects.filter(is_deleted=False).order_by("id")
+
+        filterset = UserFilter(request.GET, queryset=users)
+        queryset = filterset.qs
+
         paginator = UserPagination()
-        page = paginator.paginate_queryset(users, request)
+        page = paginator.paginate_queryset(queryset, request)
         serializer = UserSerializer(page, many=True)
 
         return paginator.get_paginated_response(serializer.data)

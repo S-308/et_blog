@@ -8,11 +8,14 @@ from rest_framework.permissions import IsAdminUser
 from .serializers import CategoryCreateUpdateSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.pagination import PageNumberPagination
+from .filters import CategoryFilter
+
 
 class CategoryPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
     max_page_size = 50
+
 
 class CategoryListAPIView(APIView):
     """
@@ -28,9 +31,13 @@ class CategoryListAPIView(APIView):
     )
 
     def get(self, request):
-        categories = Category.objects.all().order_by("id")    
+        categories = Category.objects.filter(is_deleted=False).order_by("id")
+    
+        filterset = CategoryFilter(request.GET, queryset=categories)
+        queryset = filterset.qs
+
         paginator = CategoryPagination()
-        page = paginator.paginate_queryset(categories, request)
+        page = paginator.paginate_queryset(queryset, request)
         serializer = CategoryListSerializer(page, many=True)
 
         return paginator.get_paginated_response(serializer.data)

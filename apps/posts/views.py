@@ -13,6 +13,7 @@ from .serializers import (
     PostCreateUpdateSerializer,
 )
 from .permissions import IsAuthorOrAdmin
+from .filters import PostFilter
 
 
 class PostPagination(PageNumberPagination):
@@ -83,21 +84,9 @@ class PostListCreateAPIView(APIView):
                 Q(content__icontains=search)
             )
 
-        # Filters
-        category = request.query_params.get("category")
-        tag = request.query_params.get("tag")
-        author = request.query_params.get("author")
-
-        if category:
-            queryset = queryset.filter(category__slug=category)
-
-        if tag:
-            queryset = queryset.filter(tags__slug=tag)
-
-        if author:
-            queryset = queryset.filter(author__username=author)
-
-        queryset = queryset.distinct()
+        # Filter
+        filterset = PostFilter(request.GET, queryset=queryset)
+        queryset = filterset.qs
 
         # Ordering
         ordering = request.query_params.get("ordering")
