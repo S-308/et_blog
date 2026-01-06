@@ -5,6 +5,12 @@ from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from .models import User
 from .serializers import UserSerializer, UserCreateSerializer
+from rest_framework.pagination import PageNumberPagination
+
+class UserPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50
 
 class UserListCreateAPIView(APIView):
     """
@@ -22,9 +28,11 @@ class UserListCreateAPIView(APIView):
 
     def get(self, request):
         users = User.objects.all().order_by("id")
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        paginator = UserPagination()
+        page = paginator.paginate_queryset(users, request)
+        serializer = UserSerializer(page, many=True)
 
+        return paginator.get_paginated_response(serializer.data)
 
     @extend_schema(
         summary="Register user",

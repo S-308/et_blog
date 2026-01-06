@@ -109,7 +109,7 @@ class PostListCreateAPIView(APIView):
                 queryset = queryset.order_by(ordering)
 
         # Pagination
-        paginator = PageNumberPagination()
+        paginator = PostPagination()
         paginated_queryset = paginator.paginate_queryset(queryset, request)
         serializer = PostListSerializer(paginated_queryset, many=True)
 

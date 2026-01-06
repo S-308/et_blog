@@ -12,8 +12,12 @@ from .serializers import (
 )
 from .permissions import IsAuthorOrAdmin
 from .throttles import CommentRateThrottle
+from rest_framework.pagination import PageNumberPagination
 
-
+class CommentPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50
 
 class PostCommentListAPIView(APIView):
     """
@@ -56,8 +60,11 @@ class PostCommentListAPIView(APIView):
             )
 
         comments = post.comments.all().order_by("id")
-        serializer = CommentListSerializer(comments, many=True)
-        return Response(serializer.data)
+        paginator = CommentPagination()
+        page = paginator.paginate_queryset(comments, request)
+        serializer = CommentListSerializer(page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
 
     @extend_schema(
         summary="Create comment",

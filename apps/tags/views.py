@@ -7,7 +7,12 @@ from .serializers import TagListSerializer
 from rest_framework.permissions import IsAdminUser
 from .serializers import TagCreateUpdateSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework.pagination import PageNumberPagination
 
+class TagPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 50
 
 class TagListAPIView(APIView):
     """
@@ -25,8 +30,11 @@ class TagListAPIView(APIView):
 
     def get(self, request):
         tags = Tag.objects.all().order_by("id")
-        serializer = TagListSerializer(tags, many=True)
-        return Response(serializer.data)
+        paginator = TagPagination()
+        page = paginator.paginate_queryset(tags, request)
+        serializer = TagListSerializer(page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
 
 
 class TagDetailAPIView(APIView):
