@@ -61,7 +61,7 @@ class PostCommentListAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        comments = post.objects.filter(is_deleted=False).order_by("id")
+        comments = post.comments.filter(is_deleted=False).order_by("id")
 
         filterset = CommentFilter(request.GET, queryset=comments)
         queryset = filterset.qs
@@ -71,6 +71,7 @@ class PostCommentListAPIView(APIView):
         serializer = CommentListSerializer(page, many=True)
 
         return paginator.get_paginated_response(serializer.data)
+
 
     @extend_schema(
         summary="Create comment",
