@@ -48,7 +48,7 @@ class Post(BaseModel):
     )
 
     class Meta:
-        # ordering = ["-created_at"]  # Testing
+        # ordering = ["-created_at"]  # Testing - Overridden by Views Ordering!
         indexes = [
             models.Index(fields=["slug"]),
             models.Index(fields=["status"]),
