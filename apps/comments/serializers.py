@@ -33,26 +33,29 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ["content", "parent"]
 
-        def validate_parent(self, parent):
-            if parent:
-                post = self.context.get("post")
-                if parent.post != post:
-                    raise serializers.ValidationError(
-                        "You cannot reply to a comment from another post."
-                    )
+    def validate_parent(self, parent):
+        if parent is None:
+            return None
 
-            depth = 1
-            current = parent
-            while current.parent:
-                depth += 1
-                current = current.parent
+        post = self.context.get("post")
+        if post is not None and parent.post_id != post.id:
+            raise serializers.ValidationError(
+                "You cannot reply to a comment from another post."
+            )
 
-            if depth >= 3:
-                raise serializers.ValidationError(
-                    "Maximum comment nesting depth reached."
-                )    
+        max_depth = 3
+        depth = 1
+        current = parent
+        while current.parent_id:
+            depth += 1
+            current = current.parent
 
-            return parent
+        if depth >= max_depth:
+            raise serializers.ValidationError(
+                "Maximum comment nesting depth reached."
+            )
+
+        return parent
 
 
 class CommentDetailSerializer(serializers.ModelSerializer):
