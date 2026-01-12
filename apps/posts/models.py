@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-from apps.users.models import BaseModel
+from apps.core.base import BaseModel
 from apps.categories.models import Category
 from apps.tags.models import Tag
 from django.utils.text import slugify

@@ -2,11 +2,11 @@ from rest_framework import serializers
 from .models import Comment
 
 
-
 class RecursiveCommentSerializer(serializers.Serializer):
     def to_representation(self, value):
         serializer = CommentListSerializer(value, context=self.context)
         return serializer.data
+
 
 class CommentListSerializer(serializers.ModelSerializer):
     replies = RecursiveCommentSerializer(many=True, read_only=True)
@@ -53,6 +53,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
                 )    
 
             return parent
+
 
 class CommentDetailSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField()

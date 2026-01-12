@@ -17,6 +17,7 @@ Including another URLconf
 
     BaseModel
         ↑
+      Core
       User
       Post
      Comment

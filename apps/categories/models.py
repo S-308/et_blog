@@ -1,5 +1,5 @@
 from django.db import models
-from apps.users.models import BaseModel
+from apps.core.base import BaseModel
 
 
 class Category(BaseModel):

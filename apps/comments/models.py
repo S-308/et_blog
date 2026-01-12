@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 from apps.posts.models import Post
-from apps.users.models import BaseModel
+from apps.core.base import BaseModel
 
 User = settings.AUTH_USER_MODEL
 
