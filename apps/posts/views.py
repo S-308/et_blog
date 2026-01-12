@@ -151,7 +151,25 @@ class PostDetailAPIView(APIView):
 
     def get(self, request, *args, **kwargs):
         post = self.get_object(**kwargs)
+
+        # Protect draft 
+        if post.status == Post.Status.DRAFT:
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication required to view draft posts"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            if not (
+                request.user == post.author or request.user.is_staff
+            ):
+                return Response(
+                    {"detail": "You do not have permission to view this draft"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         return Response(PostDetailSerializer(post).data)
+
 
     # Swagger
     @extend_schema(
