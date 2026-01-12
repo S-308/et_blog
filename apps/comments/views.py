@@ -60,6 +60,13 @@ class PostCommentListAPIView(APIView):
                 {"detail": "Post not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+        if post.status == Post.Status.DRAFT:
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication required to view comments on draft posts"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
         comments = post.comments.filter(
             is_deleted=False,
@@ -99,6 +106,13 @@ class PostCommentListAPIView(APIView):
             return Response(
                 {"detail": "Post not found"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Block commenting on drafts
+        if post.status == Post.Status.DRAFT:
+            return Response(
+                {"detail": "Comments are disabled for draft posts"},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         serializer = CommentCreateSerializer(
