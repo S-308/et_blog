@@ -5,19 +5,27 @@ from apps.users.models import BaseModel
 
 User = settings.AUTH_USER_MODEL
 
-
 class Comment(BaseModel):
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
         related_name="comments"
     )
+
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="comments"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
     )
+
     content = models.TextField()
+
+    parent = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="replies"
+    )
 
     class Meta:
         ordering = ("id",)

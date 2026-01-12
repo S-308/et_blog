@@ -61,7 +61,7 @@ class PostCommentListAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        comments = post.comments.filter(is_deleted=False).order_by("id")
+        comments = post.comments.filter(is_deleted=False,parent__isnull=True).order_by("id")
 
         filterset = CommentFilter(request.GET, queryset=comments)
         queryset = filterset.qs
@@ -98,7 +98,7 @@ class PostCommentListAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = CommentCreateSerializer(data=request.data)
+        serializer = CommentCreateSerializer(data=request.data,context={"post": post})
         serializer.is_valid(raise_exception=True)
 
         comment = serializer.save(
@@ -155,7 +155,7 @@ class CommentDetailAPIView(APIView):
         serializer = CommentCreateSerializer(
             comment,
             data=request.data,
-            partial=True
+            partial=True,
         )
         serializer.is_valid(raise_exception=True)
 
