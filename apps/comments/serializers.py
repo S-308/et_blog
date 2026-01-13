@@ -25,7 +25,10 @@ class CommentListSerializer(serializers.ModelSerializer):
         )
 
     def get_reply_count(self, obj):
-        return obj.replies.filter(is_deleted=False).count()
+        # Use prefetched replies if available
+        if hasattr(obj, "_prefetched_objects_cache") and "replies" in obj._prefetched_objects_cache:
+            return len(obj.replies.all())
+        return obj.replies.count()
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):

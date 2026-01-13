@@ -14,6 +14,7 @@ from .permissions import IsAuthorOrAdmin
 from .throttles import CommentRateThrottle
 from rest_framework.pagination import PageNumberPagination
 from .filters import CommentFilter
+from django.db.models import Prefetch
 
 
 class CommentPagination(PageNumberPagination):
@@ -68,10 +69,20 @@ class PostCommentListAPIView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-        comments = post.comments.filter(
-            is_deleted=False,
-            parent__isnull=True,
-        ).order_by("id")
+        comments = (
+            Comment.objects
+            .filter(post=post, parent__isnull=True)
+            .select_related("author")
+            .prefetch_related(      # Prefetch to save N+1 Queries - Save DB hit.
+                Prefetch(
+                    "replies",
+                    queryset=Comment.objects
+                    .select_related("author")
+                    .order_by("id"),
+                )
+            )
+            .order_by("id")
+        )
 
         filterset = CommentFilter(request.GET, queryset=comments)
         queryset = filterset.qs
