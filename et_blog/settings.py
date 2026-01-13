@@ -206,3 +206,10 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+
+# Current Time Format : ISO-8601 timestamp with timezone and microsecond
+"""
+REST_FRAMEWORK = {
+    "DATETIME_FORMAT": "%Y-%m-%d %H:%M:%S",     # YYYY-MM-DD HH:MM
+}   
+"""

@@ -91,5 +91,5 @@ docker-compose up --build
 
 ## 👤 Author
 
-**Soham**\
+**Soham**
 
