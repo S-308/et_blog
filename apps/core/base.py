@@ -1,8 +1,11 @@
-from django.contrib.auth.models import UserManager
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import UserManager
 
+class ActiveManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
 
 class ActiveUserManager(UserManager):
     def get_queryset(self):
@@ -32,8 +35,8 @@ class BaseModel(models.Model):
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
-    objects = ActiveUserManager()
-    all_objects = UserManager()   
+    objects = ActiveManager()
+    all_objects = models.Manager()
 
     def delete(self, using=None, keep_parents=False):
         self.is_deleted = True
