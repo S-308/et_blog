@@ -77,7 +77,7 @@ class PostCommentListAPIView(APIView):
                 Prefetch(
                     "replies",
                     queryset=Comment.objects
-                    .select_related("author")
+                    .select_related("author")       # ForeignKey
                     .order_by("id"),
                 )
             )
