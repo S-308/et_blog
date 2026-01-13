@@ -31,7 +31,7 @@ class CategoryListAPIView(APIView):
     )
 
     def get(self, request):
-        categories = Category.objects.filter(is_deleted=False).order_by("id")
+        categories = Category.objects.order_by("id")    # .filter(is_deleted=False)
     
         filterset = CategoryFilter(request.GET, queryset=categories)
         queryset = filterset.qs
@@ -73,7 +73,7 @@ class CategoryDetailAPIView(APIView):
                 {"detail": "Category not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
-
+        # get_object_or_404(Category.objects, slug=slug)
         serializer = CategoryListSerializer(category)
         return Response(serializer.data)
 
@@ -95,9 +95,13 @@ class CategoryCreateAPIView(APIView):
         serializer = CategoryCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        category = serializer.save(
-            created_by=request.user
-        )
+        try:
+            category = serializer.save(created_by=request.user)
+        except Exception:
+            return Response(
+                {"detail": "Category creation failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response(
             CategoryListSerializer(category).data,
@@ -176,6 +180,9 @@ class CategoryUpdateDeleteAPIView(APIView):
                 {"detail": "Category not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+        # GUARD: idempotent delete
+        if category.is_deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         category.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

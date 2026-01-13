@@ -121,11 +121,18 @@ class PostCommentListAPIView(APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        comment = serializer.save(
-            post=post,
-            author=request.user,
-            created_by=request.user,
-        )
+        try:
+            comment = serializer.save(
+                post=post,
+                author=request.user,
+                created_by=request.user,
+            )
+        except Exception:
+            return Response(
+                {"detail": "Comment creation failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
         return Response(
             CommentDetailSerializer(comment).data,
@@ -212,6 +219,9 @@ class CommentDetailAPIView(APIView):
             )
 
         self.check_object_permissions(request, comment)
+        if comment.is_deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+                            
         comment.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -29,7 +29,7 @@ class UserListCreateAPIView(APIView):
     )
 
     def get(self, request):
-        users = User.objects.filter(is_deleted=False).order_by("id")
+        users = User.objects.order_by("id")     # .filter(is_deleted=False).
 
         filterset = UserFilter(request.GET, queryset=users)
         queryset = filterset.qs
@@ -51,7 +51,13 @@ class UserListCreateAPIView(APIView):
         serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.save()
+        try:
+            user = serializer.save()
+        except Exception as e:
+            return Response(
+                {"detail": "User creation failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response(
             UserSerializer(user).data,
@@ -93,10 +99,26 @@ class UserDetailAPIView(APIView):
 
     def put(self, request, pk):
         user = self.get_object(pk)
+
+        # GUARD: prevent update of deleted user
+        if user.is_deleted:
+            return Response(
+                {"detail": "User not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
         serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
+        serializer.is_valid(raise_exception=True)
+
+        try:
             serializer.save(updated_by=request.user)
-            return Response(serializer.data)
+        except Exception:
+            return Response(
+                {"detail": "Update failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(serializer.data)
 
     @extend_schema(
         summary="Delete user",
@@ -105,8 +127,10 @@ class UserDetailAPIView(APIView):
 
     def delete(self, request, pk):
         user = self.get_object(pk)
-        if not user:
-            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # GUARD: idempotent delete
+        if user.is_deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -61,7 +61,7 @@ class PostListCreateAPIView(APIView):
 
     def get(self, request):
 
-        queryset = Post.objects.filter(is_deleted=False).order_by("id")
+        queryset = Post.objects.order_by("id") # .filter(is_deleted=False)
 
         # Status 
         status_param = request.query_params.get("status")
@@ -103,7 +103,7 @@ class PostListCreateAPIView(APIView):
         serializer = PostListSerializer(paginated_queryset, many=True)
 
         return paginator.get_paginated_response(serializer.data)
-    
+
     @extend_schema(
         summary="Create a post",
         request=PostCreateUpdateSerializer,
@@ -114,10 +114,16 @@ class PostListCreateAPIView(APIView):
         serializer = PostCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        post = serializer.save(
-            author=request.user,
-            created_by=request.user,
-        )
+        try:
+            post = serializer.save(
+                author=request.user,
+                created_by=request.user,
+            )
+        except Exception:
+            return Response(
+                {"detail": "Post creation failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response(
             PostDetailSerializer(post).data,
@@ -190,7 +196,14 @@ class PostDetailAPIView(APIView):
         )
         serializer.is_valid(raise_exception=True)
 
-        post = serializer.save(updated_by=request.user)
+        try:
+            post = serializer.save(updated_by=request.user)
+        except Exception:
+            return Response(
+                {"detail": "Update failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
         return Response(PostDetailSerializer(post).data)
 
 
@@ -201,5 +214,9 @@ class PostDetailAPIView(APIView):
     def delete(self, request, *args, **kwargs):
         post = self.get_object(**kwargs)
         self.check_object_permissions(request, post)
+
+        if post.is_deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

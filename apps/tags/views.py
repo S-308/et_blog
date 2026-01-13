@@ -31,7 +31,7 @@ class TagListAPIView(APIView):
     )
 
     def get(self, request):
-        tags = Tag.objects.filter(is_deleted=False).order_by("id")
+        tags = Tag.objects.order_by("id") # .filter(is_deleted=False)
 
         filterset = TagFilter(request.GET, queryset=tags)
         queryset = filterset.qs
@@ -97,9 +97,13 @@ class TagCreateAPIView(APIView):
         serializer = TagCreateUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        tag = serializer.save(
-            created_by=request.user
-        )
+        try:
+            tag = serializer.save(created_by=request.user)
+        except Exception:
+            return Response(
+                {"detail": "Tag creation failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         return Response(
             TagListSerializer(tag).data,
@@ -179,6 +183,8 @@ class TagUpdateDeleteAPIView(APIView):
                 {"detail": "Tag not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
+        if tag.is_deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         tag.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
