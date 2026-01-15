@@ -1,0 +1,1544 @@
+openapi: 3.0.3
+info:
+  title: ET Blog API
+  version: 1.0.0
+  description: API documentation for the ET Blog platform
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/categories/:
+    get:
+      operationId: categories_list
+      description: Retrieve a paginated list of categories. This endpoint is public
+        and supports filtering.
+      summary: List categories
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryList'
+          description: ''
+  /api/categories/{slug}/:
+    get:
+      operationId: categories_retrieve
+      description: Retrieve a single category by its slug.
+      summary: Retrieve category
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Category slug
+        required: true
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+          description: ''
+        '404':
+          description: Category not found
+  /api/categories/{slug}/manage/:
+    patch:
+      operationId: categories_manage_partial_update
+      description: Update an existing category. This endpoint is restricted to admin
+        users.
+      summary: Update category
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Category slug
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategoryCreateUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+          description: ''
+        '400':
+          description: Invalid data
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin privileges required
+        '404':
+          description: Category not found
+    delete:
+      operationId: categories_manage_destroy
+      description: Delete a category. This operation is idempotent and restricted
+        to admin users.
+      summary: Delete category
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Category slug
+        required: true
+      tags:
+      - categories
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Category deleted successfully
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin privileges required
+        '404':
+          description: Category not found
+  /api/categories/create/:
+    post:
+      operationId: categories_create_create
+      description: Create a new category. This endpoint is restricted to admin users.
+      summary: Create category
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+          description: ''
+        '400':
+          description: Invalid data or creation failed
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin privileges required
+  /api/comments/{id}/:
+    patch:
+      operationId: comments_partial_update
+      description: Update an existing comment. Only the comment author or an admin
+        may update.
+      summary: Update comment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Comment ID
+        required: true
+      tags:
+      - comments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCommentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCommentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCommentCreateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDetail'
+          description: ''
+        '400':
+          description: Invalid data
+        '403':
+          description: Permission denied
+        '404':
+          description: Comment not found
+    delete:
+      operationId: comments_destroy
+      description: Delete a comment. This operation is idempotent and allowed only
+        for the author or admin.
+      summary: Delete comment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Comment ID
+        required: true
+      tags:
+      - comments
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Comment deleted successfully
+        '403':
+          description: Permission denied
+        '404':
+          description: Comment not found
+  /api/posts/:
+    get:
+      tags:
+        - Posts
+      summary: List blog posts
+      description: >
+        Retrieve a paginated list of blog posts.
+        - Published posts are publicly accessible.
+        - Draft posts are returned **only** when the requester is authenticated
+          and explicitly filters by `status=draft`.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          example: 10
+        - name: search
+          in: query
+          schema:
+            type: string
+          example: django
+        - name: category
+          in: query
+          schema:
+            type: string
+          example: backend
+        - name: tag
+          in: query
+          schema:
+            type: string
+          example: drf
+        - name: author
+          in: query
+          schema:
+            type: string
+          example: admin
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published]
+          example: published
+        - name: ordering
+          in: query
+          schema:
+            type: string
+          example: -created_at
+      responses:
+        '200':
+          description: Paginated list of blog posts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PostList'
+
+              example:
+                count: 2
+                next: null
+                previous: null
+                results:
+                  - id: 1
+                    title: "Understanding Django Signals"
+                    slug: "understanding-django-signals"
+                    author: "admin"
+                    status: "published"
+                    created_at: "2026-01-12T10:15:30Z"
+                  - id: 2
+                    title: "JWT Authentication in DRF"
+                    slug: "jwt-authentication-drf"
+                    author: "admin"
+                    status: "published"
+                    created_at: "2026-01-13T09:00:00Z"
+        '403':
+          description: Authentication required to view draft posts
+    post:
+      operationId: posts_create
+      description: Create a new blog post. Authentication is required. The authenticated
+        user becomes the author.
+      summary: Create a post
+      tags:
+      - posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateUpdateRequest'
+            example:
+              title: "Understanding Django Signals"
+              content: "In this article, we explore how Django signals work and when to use them."
+              status: "published"
+              category: "backend"
+              tags:
+                - django
+                - drf
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostCreateUpdateRequest'
+      responses:
+        '201':
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetail'
+              example:
+                id: 12
+                title: "Understanding Django Signals"
+                slug: "understanding-django-signals"
+                content: "In this article, we explore how Django signals work and when to use them."
+                author: "admin"
+                status: "published"
+                created_at: "2026-01-15T09:30:00Z"
+        '400':
+          description: Invalid data or creation failed
+        '401':
+          description: Authentication required
+  /api/posts/{id}/:
+    get:
+      operationId: posts_retrieve
+      description: Retrieve a single blog post by ID or slug. Published posts are
+        public. Draft posts are visible only to their author or admins.
+      summary: Retrieve post
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - posts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetail'
+          description: ''
+        '403':
+          description: Not allowed to view draft post
+        '404':
+          description: Post not found
+    patch:
+      operationId: posts_partial_update
+      description: Partially update a blog post. Only the author or an admin may update
+        a post.
+      summary: Update post
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - posts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreateUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetail'
+          description: ''
+        '400':
+          description: Invalid data or update failed
+        '403':
+          description: Permission denied
+        '404':
+          description: Post not found
+    delete:
+      operationId: posts_destroy
+      description: Soft delete a blog post. This operation is idempotent.
+      summary: Delete post (soft delete)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - posts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Post deleted successfully
+        '403':
+          description: Permission denied
+        '404':
+          description: Post not found
+  /api/posts/{slug}/:
+    get:
+      operationId: posts_retrieve_2
+      description: Retrieve a single blog post by ID or slug. Published posts are
+        public. Draft posts are visible only to their author or admins.
+      summary: Retrieve post
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - posts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetail'
+          description: ''
+        '403':
+          description: Not allowed to view draft post
+        '404':
+          description: Post not found
+    patch:
+      operationId: posts_partial_update_2
+      description: Partially update a blog post. Only the author or an admin may update
+        a post.
+      summary: Update post
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - posts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPostCreateUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDetail'
+          description: ''
+        '400':
+          description: Invalid data or update failed
+        '403':
+          description: Permission denied
+        '404':
+          description: Post not found
+    delete:
+      operationId: posts_destroy_2
+      description: Soft delete a blog post. This operation is idempotent.
+      summary: Delete post (soft delete)
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - posts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Post deleted successfully
+        '403':
+          description: Permission denied
+        '404':
+          description: Post not found
+  /api/posts/{slug}/comments/:
+    get:
+      operationId: posts_comments_list
+      description: Retrieve a paginated list of top-level comments for a post. Each
+        comment may include nested replies. Comments on draft posts require authentication.
+      summary: List comments for a post
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Post slug
+        required: true
+      tags:
+      - posts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          description: Paginated list of comments with nested replies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 1
+                  next:
+                    type: string
+                    nullable: true
+                    example: null
+                  previous:
+                    type: string
+                    nullable: true
+                    example: null
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommentList'
+              example:
+                count: 1
+                next: null
+                previous: null
+                results:
+                  - id: 1
+                    content: "Great article! Very helpful."
+                    author: "reader1"
+                    created_at: "2026-01-14T10:00:00Z"
+                    reply_count: 2
+                    replies:
+                      - id: 2
+                        content: "Glad you found it useful!"
+                        author: "admin"
+                        created_at: "2026-01-14T10:10:00Z"
+                        reply_count: 0
+                        replies: []
+                      - id: 3
+                        content: "Thanks for the feedback 👍"
+                        author: "admin"
+                        created_at: "2026-01-14T10:15:00Z"
+                        reply_count: 0
+                        replies: []
+        '403':
+          description: Authentication required to view comments on draft posts
+        '404':
+          description: Post not found
+    post:
+      operationId: posts_comments_create
+      description: Create a comment on a published post. Supports nested replies using
+        the parent field. This endpoint is rate limited.
+      summary: Create comment
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Post slug
+        required: true
+      tags:
+      - posts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDetail'
+          description: ''
+        '400':
+          description: Invalid data or creation failed
+        '403':
+          description: Comments are disabled for draft posts
+        '404':
+          description: Post not found
+        '429':
+          description: Rate limit exceeded
+  /api/tags/:
+    get:
+      operationId: tags_list
+      description: Retrieve a paginated list of tags. This endpoint is public and
+        supports filtering.
+      summary: List tags
+      parameters:
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Page number
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Number of items per page
+      tags:
+      - tags
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TagList'
+          description: ''
+  /api/tags/{slug}/:
+    get:
+      operationId: tags_retrieve
+      description: Retrieve a single tag by its slug.
+      summary: Retrieve tag
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Tag slug
+        required: true
+      tags:
+      - tags
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+          description: ''
+        '404':
+          description: Tag not found
+  /api/tags/{slug}/manage/:
+    patch:
+      operationId: tags_manage_partial_update
+      description: Update an existing tag. This endpoint is restricted to admin users.
+      summary: Update tag
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Tag slug
+        required: true
+      tags:
+      - tags
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTagCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTagCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTagCreateUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+          description: ''
+        '400':
+          description: Invalid data
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin privileges required
+        '404':
+          description: Tag not found
+    delete:
+      operationId: tags_manage_destroy
+      description: Delete a tag. This operation is idempotent and restricted to admin
+        users.
+      summary: Delete tag
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        description: Tag slug
+        required: true
+      tags:
+      - tags
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Tag deleted successfully
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin privileges required
+        '404':
+          description: Tag not found
+  /api/tags/create/:
+    post:
+      operationId: tags_create_create
+      description: Create a new tag. This endpoint is restricted to admin users.
+      summary: Create tag
+      tags:
+      - tags
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCreateUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TagCreateUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TagCreateUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+          description: ''
+        '400':
+          description: Invalid data or creation failed
+        '401':
+          description: Authentication required
+        '403':
+          description: Admin privileges required
+  /api/users/:
+    get:
+      operationId: users_retrieve
+      description: Retrieve a paginated list of users. Supports filtering and page
+        size customization.
+      summary: List users
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: Paginated list of users
+    post:
+      operationId: users_create
+      description: Create a new user account. This endpoint is public and does not
+        require authentication.
+      summary: Register user
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '400':
+          description: Validation error or user creation failed
+  /api/users/{id}/:
+    get:
+      operationId: users_retrieve_2
+      description: Retrieve a user by their unique ID.
+      summary: Retrieve user
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '404':
+          description: User not found
+    put:
+      operationId: users_update
+      description: Update user details. Deleted users cannot be updated.
+      summary: Update user
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '400':
+          description: Invalid data or update failed
+        '404':
+          description: User not found
+    delete:
+      operationId: users_destroy
+      description: Delete a user account. This operation is idempotent.
+      summary: Delete user
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          description: User not found
+components:
+  schemas:
+    CategoryCreateUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 120
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - name
+      - slug
+    CategoryList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 120
+          pattern: ^[-a-zA-Z0-9_]+$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - slug
+    CommentCreateRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+        parent:
+          type: integer
+          nullable: true
+      required:
+      - content
+    CommentDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        content:
+          type: string
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        post:
+          type: integer
+          readOnly: true
+        parent:
+          type: integer
+          nullable: true
+      required:
+      - author
+      - content
+      - created_at
+      - created_by
+      - id
+      - post
+      - updated_at
+      - updated_by
+    CommentList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        content:
+          type: string
+        author:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        reply_count:
+          type: integer
+          readOnly: true
+      required:
+      - author
+      - content
+      - created_at
+      - id
+      - reply_count
+    PatchedCategoryCreateUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 120
+          pattern: ^[-a-zA-Z0-9_]+$
+    PatchedCommentCreateRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+        parent:
+          type: integer
+          nullable: true
+    PatchedPostCreateUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 50
+        content:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        category:
+          type: string
+          minLength: 1
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+    PatchedTagCreateUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 60
+          pattern: ^[-a-zA-Z0-9_]+$
+    PostCreateUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 50
+        content:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        category:
+          type: string
+          minLength: 1
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+      - content
+      - title
+    PostDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author:
+          type: string
+          readOnly: true
+        category:
+          type: string
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        is_deleted:
+          type: boolean
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        title:
+          type: string
+          maxLength: 50
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        content:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        image:
+          type: string
+          format: uri
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+        updated_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - author
+      - category
+      - content
+      - created_at
+      - created_by
+      - id
+      - tags
+      - title
+      - updated_at
+      - updated_by
+    PostList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 50
+        slug:
+          type: string
+          maxLength: 50
+          pattern: ^[-a-zA-Z0-9_]+$
+        author:
+          type: string
+          readOnly: true
+        category:
+          type: string
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - category
+      - created_at
+      - id
+      - tags
+      - title
+    StatusEnum:
+      enum:
+      - draft
+      - published
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `published` - Published
+    TagCreateUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 60
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - name
+      - slug
+    TagList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        slug:
+          type: string
+          maxLength: 60
+          pattern: ^[-a-zA-Z0-9_]+$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - slug
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - id
+      - updated_at
+      - username
+    UserCreateRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - password
+      - username
+    UserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - username
+    PaginatedResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 42
+        next:
+          type: string
+          nullable: true
+          example: "http://127.0.0.1:8000/api/resource/?page=2"
+        previous:
+          type: string
+          nullable: true
+          example: null
+        results:
+          type: array
+          description: List of results for the current page
+          items: {}
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Something went wrong.
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+
