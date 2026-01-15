@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from apps.posts.models import Post
 from .models import Comment
 from .serializers import (
@@ -40,7 +40,11 @@ class PostCommentListAPIView(APIView):
 
     @extend_schema(
         summary="List comments for a post",
-        description="Retrieve all comments associated with a specific post.",
+        description=(
+            "Retrieve a paginated list of top-level comments for a post. "
+            "Each comment may include nested replies. "
+            "Comments on draft posts require authentication."
+        ),
         parameters=[
             OpenApiParameter(
                 name="slug",
@@ -48,10 +52,19 @@ class PostCommentListAPIView(APIView):
                 required=True,
                 type=str,
                 location=OpenApiParameter.PATH,
-            )
+            ),
+            OpenApiParameter("page", int, description="Page number"),
+            OpenApiParameter("page_size", int, description="Number of items per page"),
         ],
-        responses=CommentListSerializer(many=True),
+        responses={
+            200: CommentListSerializer(many=True),
+            403: OpenApiResponse(
+                description="Authentication required to view comments on draft posts"
+            ),
+            404: OpenApiResponse(description="Post not found"),
+        },
     )
+
 
     def get(self, request, slug):
         try:
@@ -96,7 +109,11 @@ class PostCommentListAPIView(APIView):
 
     @extend_schema(
         summary="Create comment",
-        description="Create a comment on a post. Rate limited.",
+        description=(
+            "Create a comment on a published post. "
+            "Supports nested replies using the parent field. "
+            "This endpoint is rate limited."
+        ),
         parameters=[
             OpenApiParameter(
                 name="slug",
@@ -107,7 +124,13 @@ class PostCommentListAPIView(APIView):
             )
         ],
         request=CommentCreateSerializer,
-        responses=CommentDetailSerializer,
+        responses={
+            201: CommentDetailSerializer,
+            400: OpenApiResponse(description="Invalid data or creation failed"),
+            403: OpenApiResponse(description="Comments are disabled for draft posts"),
+            404: OpenApiResponse(description="Post not found"),
+            429: OpenApiResponse(description="Rate limit exceeded"),
+        },
     )
 
     def post(self, request, slug):
@@ -166,7 +189,10 @@ class CommentDetailAPIView(APIView):
         
     @extend_schema(
         summary="Update comment",
-        description="Update an existing comment (author or admin only).",
+        description=(
+            "Update an existing comment. "
+            "Only the comment author or an admin may update."
+        ),
         parameters=[
             OpenApiParameter(
                 name="id",
@@ -177,7 +203,12 @@ class CommentDetailAPIView(APIView):
             )
         ],
         request=CommentCreateSerializer,
-        responses=CommentDetailSerializer,
+        responses={
+            200: CommentDetailSerializer,
+            400: OpenApiResponse(description="Invalid data"),
+            403: OpenApiResponse(description="Permission denied"),
+            404: OpenApiResponse(description="Comment not found"),
+        },
     )
 
     def patch(self, request, id):
@@ -209,7 +240,10 @@ class CommentDetailAPIView(APIView):
     
     @extend_schema(
         summary="Delete comment",
-        description="Delete a comment (author or admin only).",
+        description=(
+            "Delete a comment. "
+            "This operation is idempotent and allowed only for the author or admin."
+        ),
         parameters=[
             OpenApiParameter(
                 name="id",
@@ -219,6 +253,11 @@ class CommentDetailAPIView(APIView):
                 location=OpenApiParameter.PATH,
             )
         ],
+        responses={
+            204: OpenApiResponse(description="Comment deleted successfully"),
+            403: OpenApiResponse(description="Permission denied"),
+            404: OpenApiResponse(description="Comment not found"),
+        },
     )
 
     def delete(self, request, id):

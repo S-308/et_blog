@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Comment
+from drf_spectacular.utils import extend_schema_field
 
 
 class RecursiveCommentSerializer(serializers.Serializer):
@@ -24,6 +25,7 @@ class CommentListSerializer(serializers.ModelSerializer):
             "replies",
         )
 
+    @extend_schema_field(int)
     def get_reply_count(self, obj):
         # Use prefetched replies if available
         if hasattr(obj, "_prefetched_objects_cache") and "replies" in obj._prefetched_objects_cache:

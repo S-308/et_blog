@@ -6,7 +6,7 @@ from .models import Tag
 from .serializers import TagListSerializer
 from rest_framework.permissions import IsAdminUser
 from .serializers import TagCreateUpdateSerializer
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from rest_framework.pagination import PageNumberPagination
 from .filters import TagFilter
 
@@ -26,8 +26,17 @@ class TagListAPIView(APIView):
 
     @extend_schema(
         summary="List tags",
-        description="Public endpoint to list all tags.",
-        responses=TagListSerializer(many=True),
+        description=(
+            "Retrieve a paginated list of tags. "
+            "This endpoint is public and supports filtering."
+        ),
+        parameters=[
+            OpenApiParameter("page", int, description="Page number"),
+            OpenApiParameter("page_size", int, description="Number of items per page"),
+        ],
+        responses={
+            200: TagListSerializer(many=True),
+        },
     )
 
     def get(self, request):
@@ -53,7 +62,7 @@ class TagDetailAPIView(APIView):
 
     @extend_schema(
         summary="Retrieve tag",
-        description="Retrieve a tag by its slug.",
+        description="Retrieve a single tag by its slug.",
         parameters=[
             OpenApiParameter(
                 name="slug",
@@ -63,7 +72,10 @@ class TagDetailAPIView(APIView):
                 location=OpenApiParameter.PATH,
             )
         ],
-        responses=TagListSerializer,
+        responses={
+            200: TagListSerializer,
+            404: OpenApiResponse(description="Tag not found"),
+        },
     )
 
     def get(self, request, slug):
@@ -88,9 +100,17 @@ class TagCreateAPIView(APIView):
 
     @extend_schema(
         summary="Create tag",
-        description="Admin-only endpoint to create a new tag.",
+        description=(
+            "Create a new tag. "
+            "This endpoint is restricted to admin users."
+        ),
         request=TagCreateUpdateSerializer,
-        responses=TagListSerializer,
+        responses={
+            201: TagListSerializer,
+            400: OpenApiResponse(description="Invalid data or creation failed"),
+            401: OpenApiResponse(description="Authentication required"),
+            403: OpenApiResponse(description="Admin privileges required"),
+        },
     )
 
     def post(self, request):
@@ -127,7 +147,10 @@ class TagUpdateDeleteAPIView(APIView):
 
     @extend_schema(
         summary="Update tag",
-        description="Admin-only endpoint to update a tag.",
+        description=(
+            "Update an existing tag. "
+            "This endpoint is restricted to admin users."
+        ),
         parameters=[
             OpenApiParameter(
                 name="slug",
@@ -138,7 +161,13 @@ class TagUpdateDeleteAPIView(APIView):
             )
         ],
         request=TagCreateUpdateSerializer,
-        responses=TagListSerializer,
+        responses={
+            200: TagListSerializer,
+            400: OpenApiResponse(description="Invalid data"),
+            401: OpenApiResponse(description="Authentication required"),
+            403: OpenApiResponse(description="Admin privileges required"),
+            404: OpenApiResponse(description="Tag not found"),
+        },
     )
 
     def patch(self, request, slug):
@@ -164,7 +193,10 @@ class TagUpdateDeleteAPIView(APIView):
     
     @extend_schema(
         summary="Delete tag",
-        description="Admin-only endpoint to delete a tag.",
+        description=(
+            "Delete a tag. "
+            "This operation is idempotent and restricted to admin users."
+        ),
         parameters=[
             OpenApiParameter(
                 name="slug",
@@ -174,6 +206,12 @@ class TagUpdateDeleteAPIView(APIView):
                 location=OpenApiParameter.PATH,
             )
         ],
+        responses={
+            204: OpenApiResponse(description="Tag deleted successfully"),
+            401: OpenApiResponse(description="Authentication required"),
+            403: OpenApiResponse(description="Admin privileges required"),
+            404: OpenApiResponse(description="Tag not found"),
+        },
     )
 
     def delete(self, request, slug):

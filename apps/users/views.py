@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from .models import User
 from .serializers import UserSerializer, UserCreateSerializer
 from rest_framework.pagination import PageNumberPagination
@@ -24,8 +24,16 @@ class UserListCreateAPIView(APIView):
 
     @extend_schema(
         summary="List users",
-        description="List all users.",
-        responses=UserSerializer(many=True),
+        description=(
+            "Retrieve a paginated list of users. "
+            "Supports filtering and page size customization."
+        ),
+        responses={
+            200: OpenApiResponse(
+                response=UserSerializer(many=True),
+                description="Paginated list of users"
+            )
+        },
     )
 
     def get(self, request):
@@ -42,10 +50,17 @@ class UserListCreateAPIView(APIView):
 
     @extend_schema(
         summary="Register user",
-        description="Create New User.",
+        description=(
+            "Create a new user account. "
+            "This endpoint is public and does not require authentication."
+        ),
         request=UserCreateSerializer,
-        responses=UserSerializer,
+        responses={
+            201: UserSerializer,
+            400: OpenApiResponse(description="Validation error or user creation failed"),
+        },
     )
+
 
     def post(self, request):
         serializer = UserCreateSerializer(data=request.data)
@@ -79,23 +94,32 @@ class UserDetailAPIView(APIView):
 
     @extend_schema(
         summary="Retrieve user",
-        description="Retrieve a user by ID.",
-        responses=UserSerializer,
+        description="Retrieve a user by their unique ID.",
+        responses={
+            200: UserSerializer,
+            404: OpenApiResponse(description="User not found"),
+        },
     )
 
     def get(self, request, pk):
         user = self.get_object(pk)
-        if not user:
-            return Response({"detail": "Not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
     @extend_schema(
         summary="Update user",
-        description="Update user details",
+        description=(
+            "Update user details. "
+            "Deleted users cannot be updated."
+        ),
         request=UserSerializer,
-        responses=UserSerializer,
+        responses={
+            200: UserSerializer,
+            400: OpenApiResponse(description="Invalid data or update failed"),
+            404: OpenApiResponse(description="User not found"),
+        },
     )
+
 
     def put(self, request, pk):
         user = self.get_object(pk)
@@ -122,8 +146,16 @@ class UserDetailAPIView(APIView):
 
     @extend_schema(
         summary="Delete user",
-        description="Delete a user account",
+        description=(
+            "Delete a user account. "
+            "This operation is idempotent."
+        ),
+        responses={
+            204: OpenApiResponse(description="User deleted successfully"),
+            404: OpenApiResponse(description="User not found"),
+        },
     )
+
 
     def delete(self, request, pk):
         user = self.get_object(pk)
