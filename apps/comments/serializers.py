@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Comment
 from drf_spectacular.utils import extend_schema_field
+from .constants import MAX_COMMENT_DEPTH
 
 
 class RecursiveCommentSerializer(serializers.Serializer):
@@ -48,14 +49,13 @@ class CommentCreateSerializer(serializers.ModelSerializer):
                 "You cannot reply to a comment from another post."
             )
 
-        max_depth = 3
         depth = 1
         current = parent
         while current.parent_id:
             depth += 1
             current = current.parent
 
-        if depth >= max_depth:
+        if depth >= MAX_COMMENT_DEPTH:
             raise serializers.ValidationError(
                 "Maximum comment nesting depth reached."
             )
