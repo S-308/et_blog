@@ -222,5 +222,5 @@ class CategoryUpdateDeleteAPIView(APIView):
         if category.is_deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        category.delete()
+        category.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
