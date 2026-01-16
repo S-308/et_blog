@@ -1,9 +1,10 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from apps.posts.models import Post
 from apps.core.base import BaseModel
 from django.core.exceptions import ValidationError
 from .constants import MAX_COMMENT_DEPTH
+from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL
 
@@ -50,9 +51,40 @@ class Comment(BaseModel):
         else:
             self.depth = 0
 
+    def soft_delete(self):
+        """
+        Soft delete this comment only.
+        Does NOT cascade to parent or children.
+        """
+        with transaction.atomic():
+            if self.is_deleted:
+                return
+
+            self.is_deleted = True
+            self.deleted_at = timezone.now()
+            self.save(update_fields=["is_deleted", "deleted_at"])
+
+    def restore(self):
+        """
+        Restore this comment only.
+        Assumes post is already active.
+        """
+        with transaction.atomic():
+            if not self.is_deleted:
+                return
+
+            # Optional safety (recommended)
+            if self.post.is_deleted:
+                return  # or raise ValidationError
+
+            self.is_deleted = False
+            self.deleted_at = None
+            self.save(update_fields=["is_deleted", "deleted_at"])
+
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"Comment #{self.id} by {self.author}"

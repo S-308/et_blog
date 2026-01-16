@@ -2,9 +2,15 @@ from django.contrib import admin
 from .models import Comment
 from .constants import MAX_COMMENT_DEPTH
 
+@admin.action(description="Soft delete selected comments")
+def soft_delete_comments(modeladmin, request, queryset):
+    for comment in queryset:
+        comment.soft_delete()
+
 @admin.action(description="Restore selected comments")
 def restore_comments(modeladmin, request, queryset):
-    queryset.update(is_deleted=False, deleted_at=None)
+    for comment in queryset:
+        comment.restore()
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
@@ -12,7 +18,7 @@ class CommentAdmin(admin.ModelAdmin):
     list_display = ("id", "post", "author", "depth", "created_at")
     list_filter = ("is_deleted",)
     ordering = ("id",)
-    actions = [restore_comments]
+    actions = [soft_delete_comments, restore_comments]
     readonly_fields = ("depth",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -38,3 +44,8 @@ class CommentAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return Comment.all_objects.all()
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions.pop("delete_selected", None) 
+        return actions

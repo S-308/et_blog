@@ -272,6 +272,5 @@ class CommentDetailAPIView(APIView):
         if comment.is_deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
                             
-        comment.delete()
-
+        comment.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
