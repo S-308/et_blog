@@ -224,5 +224,5 @@ class TagUpdateDeleteAPIView(APIView):
         if tag.is_deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        tag.delete()
+        tag.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
