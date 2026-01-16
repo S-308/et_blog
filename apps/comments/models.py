@@ -54,7 +54,6 @@ class Comment(BaseModel):
     def soft_delete(self):
         """
         Soft delete this comment only.
-        Does NOT cascade to parent or children.
         """
         with transaction.atomic():
             if self.is_deleted:
@@ -67,13 +66,11 @@ class Comment(BaseModel):
     def restore(self):
         """
         Restore this comment only.
-        Assumes post is already active.
         """
         with transaction.atomic():
             if not self.is_deleted:
                 return
 
-            # Optional safety (recommended)
             if self.post.is_deleted:
                 return  # or raise ValidationError
 
