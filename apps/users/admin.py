@@ -26,7 +26,6 @@ class UserAdmin(BaseUserAdmin):
         "email",
         "is_staff",
         "is_active",
-        "is_deleted",
         "created_at",
     )
     list_filter = ("is_staff", "is_active", "is_deleted")
