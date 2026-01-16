@@ -1,9 +1,10 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from apps.core.base import BaseModel
 from apps.categories.models import Category
 from apps.tags.models import Tag
 from django.utils.text import slugify
+from django.utils import timezone
 
 
 class Post(BaseModel):
@@ -56,6 +57,44 @@ class Post(BaseModel):
 
     def __str__(self):
         return self.title
+
+    def soft_delete(self):
+        """
+        Soft-delete the post and all related comments.
+        """
+        with transaction.atomic():
+            if self.is_deleted:
+                return
+
+            deleted_at = timezone.now()
+
+            self.is_deleted = True
+            self.deleted_at = deleted_at
+            self.save(update_fields=["is_deleted", "deleted_at"])
+
+            self.comments.update(
+                is_deleted=True,
+                deleted_at=deleted_at,
+            )
+
+    def restore(self):
+        """
+        Restore the post and all related comments.
+        """
+        from apps.comments.models import Comment  #local import - Avoid Circular Import
+
+        with transaction.atomic():
+            if not self.is_deleted:
+                return
+
+            self.is_deleted = False
+            self.deleted_at = None
+            self.save(update_fields=["is_deleted", "deleted_at"])
+
+            Comment.all_objects.filter(post=self).update(
+                is_deleted=False,
+                deleted_at=None,
+            )
 
     def save(self, *args, **kwargs):
         if not self.slug:

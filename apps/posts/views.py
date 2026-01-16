@@ -268,5 +268,5 @@ class PostDetailAPIView(APIView):
         if post.is_deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        post.delete()
+        post.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
