@@ -12,7 +12,7 @@ class User(AbstractUser, BaseModel):
 
     def soft_delete(self):
         """
-        Disable the user and mark as deleted.
+        Soft Delete the user and mark as deleted.
         """
         with transaction.atomic():
             if self.is_deleted:
@@ -25,7 +25,7 @@ class User(AbstractUser, BaseModel):
 
     def restore(self):
         """
-        Restore user account (does NOT auto-activate).
+        Restore user account
         """
         with transaction.atomic():
             if not self.is_deleted:
