@@ -1,12 +1,12 @@
 from django.contrib import admin
 from .models import Post
 
-@admin.action(description="Soft delete selected posts")
+@admin.action(description="Soft Delete Selected Posts")
 def soft_delete_posts(modeladmin, request, queryset):
     for post in queryset:
         post.soft_delete()
 
-@admin.action(description="Restore selected posts")
+@admin.action(description="Restore Selected Posts")
 def restore_posts(modeladmin, request, queryset):
     for post in queryset:
         post.restore()

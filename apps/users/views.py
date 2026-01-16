@@ -164,5 +164,5 @@ class UserDetailAPIView(APIView):
         if user.is_deleted:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        user.delete()
+        user.soft_delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

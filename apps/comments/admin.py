@@ -2,12 +2,12 @@ from django.contrib import admin
 from .models import Comment
 from .constants import MAX_COMMENT_DEPTH
 
-@admin.action(description="Soft delete selected comments")
+@admin.action(description="Soft Delete Selected Comments")
 def soft_delete_comments(modeladmin, request, queryset):
     for comment in queryset:
         comment.soft_delete()
 
-@admin.action(description="Restore selected comments")
+@admin.action(description="Restore Selected Comments")
 def restore_comments(modeladmin, request, queryset):
     for comment in queryset:
         comment.restore()

@@ -2,13 +2,13 @@ from django.contrib import admin
 from .models import Category
 
 
-@admin.action(description="Soft delete selected categories")
+@admin.action(description="Soft Delete Selected Categories")
 def soft_delete_categories(modeladmin, request, queryset):
     for category in queryset:
         category.soft_delete()
 
 
-@admin.action(description="Restore selected categories")
+@admin.action(description="Restore Selected Categories")
 def restore_categories(modeladmin, request, queryset):
     for category in queryset:
         category.restore()

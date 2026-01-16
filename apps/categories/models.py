@@ -13,7 +13,6 @@ class Category(BaseModel):
     def soft_delete(self):
         """
         Soft delete this category only.
-        Does NOT cascade to posts.
         """
         with transaction.atomic():
             if self.is_deleted:
